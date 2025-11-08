@@ -1,0 +1,13 @@
+# Binaries
+main
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build
+bin/
+pkg/
+
+# Go modules
+vendor/
