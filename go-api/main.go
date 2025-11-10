@@ -26,13 +26,21 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to connect to RabbitMQ: %v", err)
     }
-    defer conn.Close()
+    defer func() {
+        if err := conn.Close(); err != nil {
+            log.Printf("Error closing RabbitMQ connection: %v", err)
+        }
+    }()
 
     ch, err := conn.Channel()
     if err != nil {
         log.Fatalf("Failed to open a channel: %v", err)
     }
-    defer ch.Close()
+    defer func() {
+        if err := ch.Close(); err != nil {
+            log.Printf("Error closing RabbitMQ channel: %v", err)
+        }
+    }()
 
     queueName := "southpark_messages"
     _, err = ch.QueueDeclare(queueName, true, false, false, false, nil)
@@ -60,6 +68,7 @@ func main() {
                 http.Error(w, err.Error(), http.StatusBadRequest)
                 return
             }
+            log.Printf("Error publishing message: %v", err)
             http.Error(w, "Internal Server Error", http.StatusInternalServerError)
             return
         }

@@ -21,14 +21,29 @@ func NewRabbitMQPublisher(ch *amqp.Channel, queue string) ports.MessagePublisher
 }
 
 func (r *RabbitMQPublisher) Publish(msg domain.Message) error {
+
+    _, err := r.Channel.QueueDeclare(
+        r.Queue, // queue name
+        true,    // durable
+        false,   // auto-delete
+        false,   // exclusive
+        false,   // no-wait
+        nil,     // args
+    )
+    if err != nil {
+        return err
+    }
+
     body, err := json.Marshal(msg)
     if err != nil {
         return err
     }
+
     return r.Channel.Publish(
-        "",          // exchange
-        r.Queue,     // routing key = queue name
-        false, false,
+        "",
+        r.Queue,
+        false,
+        false,
         amqp.Publishing{
             ContentType: "application/json",
             Body:        body,
