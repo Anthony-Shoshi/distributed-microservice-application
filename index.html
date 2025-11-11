@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>South Park Messenger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        select, input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:active {
+            transform: translateY(0);
+        }
+
+        .btn-start {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-start:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-stop {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-stop:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .interval-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .interval-group input {
+            flex: 1;
+        }
+
+        .interval-group span {
+            color: #666;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .status {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status.idle {
+            border-left-color: #cbd5e0;
+        }
+
+        .status.running {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: none;
+        }
+
+        .status-indicator.running {
+            background: #48bb78;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.idle {
+            background: #cbd5e0;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-text {
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .log {
+            background: #1a202c;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            border: 1px solid #4a5568;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .log-entry.success {
+            color: #68d391;
+        }
+
+        .log-entry.error {
+            color: #fc8181;
+        }
+
+        .log-entry.info {
+            color: #63b3ed;
+        }
+
+        .log-entry.timestamp {
+            color: #a0aec0;
+        }
+
+        .characters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .character-btn {
+            padding: 10px;
+            background: #edf2f7;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .character-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .character-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .info-text {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 South Park Messenger</h1>
+        <p class="subtitle">Send random South Park character messages!</p>
+
+        <div class="status idle">
+            <span class="status-indicator idle"></span>
+            <span class="status-text">Status: <strong>Idle</strong></span>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Select a Character:</label>
+                <div class="characters">
+                    <button class="character-btn selected" data-character="Cartman">Cartman</button>
+                    <button class="character-btn" data-character="Kyle">Kyle</button>
+                    <button class="character-btn" data-character="Stan">Stan</button>
+                    <button class="character-btn" data-character="Kenny">Kenny</button>
+                    <button class="character-btn" data-character="Butters">Butters</button>
+                    <button class="character-btn" data-character="Randy">Randy</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="interval">Auto-send Interval (seconds):</label>
+                <div class="interval-group">
+                    <input type="number" id="interval" value="5" min="1" max="60">
+                    <span id="intervalDisplay">Every 5 seconds</span>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-send" id="sendBtn">Send Now</button>
+                <button class="btn-start" id="startBtn">Start Auto-Send</button>
+                <button class="btn-stop" id="stopBtn" disabled>Stop Auto-Send</button>
+            </div>
+
+            <p class="info-text">💡 Click "Send Now" to send a single message, or use "Start Auto-Send" to send messages at regular intervals.</p>
+        </div>
+
+        <div class="log" id="log">
+            <div class="log-entry info"><span class="timestamp">[Ready]</span> South Park Messenger initialized</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/messages';
+
+        const messages = {
+            Cartman: [
+                "Respect my authoritah!",
+                "Screw you guys, I'm going home!",
+                "I'm not fat, I'm big-boned!",
+                "Come on, that's not fair!",
+                "Dude, that's so lame.",
+                "Yer a towel!",
+            ],
+            Kyle: [
+                "Oh my god, they killed Kenny!",
+                "You bastards!",
+                "Geez man, that's harsh.",
+                "That's so messed up!",
+                "Dude, this is insane.",
+                "What the heck?",
+            ],
+            Stan: [
+                "Dude, what?",
+                "That's sweet, man.",
+                "Oh man, that sucks.",
+                "This is totally wicked.",
+                "What the crap?",
+                "Aw, geez.",
+            ],
+            Kenny: [
+                "Mmph mrmph mrkgh!",
+                "Hmph hmrph hmph!",
+                "Mwrmph wrph!",
+                "Hmph mwrph rph!",
+                "Wrmph hmph mwph!",
+                "Mrkgh wrph hmph!",
+            ],
+            Butters: [
+                "Oh hamburgers!",
+                "That's not okay!",
+                "I'm gonna get in trouble!",
+                "Oh gosh!",
+                "Aw, crumbs!",
+                "Super!",
+            ],
+            Randy: [
+                "Crap!",
+                "Oh geez, oh geez!",
+                "I learned it from watching you, Dad!",
+                "Sweet!",
+                "This is gonna be sweet!",
+                "Don't you dare take that tone with me!",
+            ],
+        };
+
+        let selectedCharacter = 'Cartman';
+        let isAutoSending = false;
+        let autoSendInterval = null;
+
+        const sendBtn = document.getElementById('sendBtn');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const logDiv = document.getElementById('log');
+        const intervalInput = document.getElementById('interval');
+        const intervalDisplay = document.getElementById('intervalDisplay');
+        const statusDiv = document.querySelector('.status');
+        const statusText = document.querySelector('.status-text');
+        const statusIndicator = document.querySelector('.status-indicator');
+        const characterBtns = document.querySelectorAll('.character-btn');
+
+        function getRandomMessage(character) {
+            const charMessages = messages[character] || messages['Cartman'];
+            return charMessages[Math.floor(Math.random() * charMessages.length)];
+        }
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            entry.innerHTML = `<span class="timestamp">[${time}]</span> ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = getRandomMessage(selectedCharacter);
+            const payload = {
+                author: selectedCharacter,
+                body: message
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    addLog(`✓ ${selectedCharacter} says: "${message}"`, 'success');
+                } else {
+                    addLog(`✗ Failed to send message: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                addLog(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function updateInterval() {
+            const interval = parseInt(intervalInput.value);
+            intervalDisplay.textContent = `Every ${interval} second${interval !== 1 ? 's' : ''}`;
+        }
+
+        function startAutoSend() {
+            if (isAutoSending) return;
+
+            isAutoSending = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            intervalInput.disabled = true;
+            characterBtns.forEach(btn => btn.disabled = true);
+
+            statusDiv.classList.remove('idle');
+            statusDiv.classList.add('running');
+            statusText.innerHTML = '<span class="status-indicator running"></span><strong>Status: Auto-sending active</strong>';
+
+            addLog(`Auto-send started (every ${intervalInput.value} seconds)`, 'info');
+
+            const interval = parseInt(intervalInput.value) * 1000;
+            sendMessage();
+
+            autoSendInterval = setInterval(sendMessage, interval);
+        }
+
+        function stopAutoSend() {
+            if (!isAutoSending) return;
+
+            isAutoSending = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            intervalInput.disabled = false;
+            characterBtns.forEach(btn => btn.disabled = false);
+
+            statusDiv.classList.add('idle');
+            statusDiv.classList.remove('running');
+            statusText.innerHTML = '<span class="status-indicator idle"></span><strong>Status: Idle</strong>';
+
+            clearInterval(autoSendInterval);
+            addLog('⏹ Auto-send stopped', 'info');
+        }
+
+        characterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isAutoSending) return;
+
+                characterBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedCharacter = btn.dataset.character;
+                addLog(`Character changed to: ${selectedCharacter}`, 'info');
+            });
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+        startBtn.addEventListener('click', startAutoSend);
+        stopBtn.addEventListener('click', stopAutoSend);
+
+        intervalInput.addEventListener('change', updateInterval);
+        intervalInput.addEventListener('input', updateInterval);
+
+        // Test connection on load
+        window.addEventListener('load', () => {
+            addLog('Testing connection to API...', 'info');
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ author: 'System', body: 'Connection test' })
+            })
+            .then(() => addLog('Connected to API', 'success'))
+            .catch(err => addLog(`Cannot reach API: ${err.message}. Make sure the Go API is running on localhost:8080`, 'error'));
+        });
+    </script>
+</body>
+</html>

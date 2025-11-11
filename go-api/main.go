@@ -51,7 +51,24 @@ func main() {
     publisher := rabbitmq.NewRabbitMQPublisher(ch, queueName)
     msgService := app.NewMessageService(publisher)
 
-    http.HandleFunc("/messages", func(w http.ResponseWriter, r *http.Request) {
+    // Simple CORS middleware
+    corsMiddleware := func(next http.HandlerFunc) http.HandlerFunc {
+        return func(w http.ResponseWriter, r *http.Request) {
+            // Allow any origin (For production need to restrict this to specific origins)
+            w.Header().Set("Access-Control-Allow-Origin", "*")
+            w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+            w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+            if r.Method == http.MethodOptions {
+                w.WriteHeader(http.StatusOK)
+                return
+            }
+
+            next(w, r)
+        }
+    }
+
+    http.HandleFunc("/messages", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
         if r.Method != http.MethodPost {
             http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
             return
@@ -75,7 +92,7 @@ func main() {
 
         w.WriteHeader(http.StatusAccepted)
         fmt.Fprintln(w, "Message accepted")
-    })
+    }))
 
     port := os.Getenv("PORT")
     if port == "" {
