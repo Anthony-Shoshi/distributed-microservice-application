@@ -3,6 +3,8 @@
 A distributed microservice system where South Park characters send and receive messages asynchronously.  
 Built using **Go (Hexagonal Architecture)**, **RabbitMQ**, and **Python**.
 
+<img width="3024" height="1714" alt="image" src="https://github.com/user-attachments/assets/e04d12b3-7bb1-4370-b4a9-c523d70bf894" />
+
 ---
 
 ## 🧱 Project Structure
